@@ -4,6 +4,7 @@ namespace ANovikov;
 
 use ANovikov\Error\SlackApiException;
 use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 
 class SlackApi
 {
@@ -36,7 +37,49 @@ class SlackApi
     private $client;
 
     /**
+     * @var string
+     */
+    private $apiBase = 'https://slack.com/api/';
+
+    /**
+     * @return string
+     */
+    public function getAppToken(): string
+    {
+        return $this->appToken;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBotToken(): string
+    {
+        return $this->botToken;
+    }
+
+    /**
+     * @return string
+     */
+    public function getApiBase(): string
+    {
+        return $this->apiBase;
+    }
+
+    /**
+     * @param string $apiBase
+     * @throws SlackApiException
+     */
+    public function setApiBase(string $apiBase): void
+    {
+        $isValid = filter_var($apiBase, FILTER_VALIDATE_URL);
+        SlackApiException::throwIf(!$isValid, SlackApiException::INVALID_BASE_API);
+
+        $this->apiBase = $apiBase;
+    }
+
+    /**
      * SlackApi constructor.
+     *
      * @param string $appToken
      * @param string $botToken
      * @throws SlackApiException
@@ -74,17 +117,34 @@ class SlackApi
     /**
      * @param string $type
      * @param string $endpoint
-     * @param array $args
+     * @param array $data
      * @return Response
      * @throws SlackApiException
      */
-    public function send(string $type, string $endpoint, array $args = []): Response
+    public function send(string $type, string $endpoint, array $data = []): Response
     {
         $this->validateType($type);
+        $fullUrl = $this->getFullUrl($endpoint);
+
+        $requestOptions = $type === self::REQUEST_POST
+            ? RequestOptions::JSON
+            : RequestOptions::QUERY;
 
 //        if (!$this->isValid($endpoint, $args)) {
 //            return $this->response->generate($this->getErrors());
 //        }
+
+        try {
+            /** @var \GuzzleHttp\Psr7\Response $response */
+            $response = $this->client->$type($fullUrl, [
+                'headers' => $this->getHeaders(),
+                $requestOptions => $data
+            ]);
+            $data = $response->getBody()->getContents();
+            print_r($data);exit;
+        } catch (\Exception $exception) {
+
+        }
 
         return $this->response->generate([]);
         // validate
@@ -92,6 +152,15 @@ class SlackApi
         // send request
         // handle data
         // send response object
+    }
+
+    /**
+     * @param string $endpoint
+     * @return string
+     */
+    private function getFullUrl(string $endpoint): string
+    {
+        return sprintf('%s/%s', trim($this->getApiBase(), '/'), $endpoint);
     }
 
     /**
@@ -149,5 +218,21 @@ class SlackApi
     {
         $notAllowed = ($type !== self::REQUEST_GET && $type !== self::REQUEST_POST);
         SlackApiException::throwIf($notAllowed, SlackApiException::NOT_AVAILABLE_REQUEST);
+    }
+
+    /**
+     * Return default headers for slack
+     * @return array
+     */
+    public function getHeaders(): array
+    {
+        return [
+            'Authorization' => sprintf('Bearer %s', !$this->isBot
+                ? $this->getAppToken()
+                : $this->getBotToken()
+            ),
+            'Accept-Encoding' => 'gzip, deflate',
+            'Content-Type' => 'application/json; charset=utf-8'
+        ];
     }
 }

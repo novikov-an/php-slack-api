@@ -102,4 +102,20 @@ class SlackApiTest extends TestCase
         $this->assertEquals(Response::class, get_class($getResponse));
         $this->assertEquals(Response::class, get_class($postResponse));
     }
+
+    /**
+     * @test
+     */
+    public function cant_set_non_valid_api_base()
+    {
+        $cases = [
+            '',
+            'not-url',
+        ];
+
+        $this->expectException(SlackApiException::class);
+        foreach ($cases as $url) {
+            $this->slackApi->setApiBase($url);
+        }
+    }
 }

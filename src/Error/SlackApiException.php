@@ -13,11 +13,13 @@ class SlackApiException extends Exception
     public const SOMETHING_WENT_WRONG = 1;
     public const SPECIFY_ONE_TOKEN = 2;
     public const NOT_AVAILABLE_REQUEST = 3;
+    public const INVALID_BASE_API = 4;
 
     public const MESSAGES = [
         self::SPECIFY_ONE_TOKEN => 'Please specify at least one token: APP or Bot',
         self::SOMETHING_WENT_WRONG => 'Something went wrong',
         self::NOT_AVAILABLE_REQUEST => 'This request is not supported, please provide POST or GET',
+        self::INVALID_BASE_API => 'Please provide a valid base API',
     ];
 
     /**
@@ -28,7 +30,6 @@ class SlackApiException extends Exception
     {
         return self::MESSAGES[$code] ?? self::MESSAGES[self::SOMETHING_WENT_WRONG];
     }
-
 
     /**
      * @param $condition
