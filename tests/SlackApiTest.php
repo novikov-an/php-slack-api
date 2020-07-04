@@ -11,8 +11,8 @@ use PHPUnit\Framework\TestCase;
  */
 class SlackApiTest extends TestCase
 {
-    public const APP_TOKEN = 'xoxp-351119455507-350674564305-790768034849-8929c4960622272346b2f963667cd4f6';
-    public const BOT_TOKEN = 'xoxb-351119455507-813400809446-IV1yvfAGZ65Dpc7hgEllhRT3';
+    public const APP_TOKEN = '';
+    public const BOT_TOKEN = '';
 
     /**
      * @var SlackApi
