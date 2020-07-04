@@ -3,6 +3,7 @@
 namespace ANovikov;
 
 use ANovikov\Error\SlackApiException;
+use ANovikov\Helpers\Hydration;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 
@@ -40,6 +41,11 @@ class SlackApi
      * @var string
      */
     private $apiBase = 'https://slack.com/api/';
+
+    /**
+     * @var Hydration
+     */
+    private $hydration;
 
     /**
      * @return string
@@ -92,6 +98,7 @@ class SlackApi
         $this->botToken = $botToken;
 
         $this->response = new Response();
+        $this->hydration = new Hydration();
 
         $this->client = new Client();
     }
@@ -140,18 +147,17 @@ class SlackApi
                 'headers' => $this->getHeaders(),
                 $requestOptions => $data
             ]);
-            $data = $response->getBody()->getContents();
-            print_r($data);exit;
+            $body = $response->getBody() ?? '';
+            $data = json_decode($body, true);
         } catch (\Exception $exception) {
 
         }
 
-        return $this->response->generate([]);
-        // validate
-            // if invalid - send response object
-        // send request
-        // handle data
-        // send response object
+        /** @var Response $response */
+        $response = $this->hydration->toObject($data, $this->response);
+        $response->setBody($data);
+
+        return $response;
     }
 
     /**
@@ -234,5 +240,55 @@ class SlackApi
             'Accept-Encoding' => 'gzip, deflate',
             'Content-Type' => 'application/json; charset=utf-8'
         ];
+    }
+
+    /**
+     * @param string $groupId
+     * @return Response
+     * @throws SlackApiException
+     */
+    public function conversationInfo(string $groupId): Response
+    {
+        $args = [
+            'channel' => $groupId
+        ];
+
+        return $this->get('conversations.info', $args);
+    }
+
+    /**
+     * @param string $string
+     * @param array $options
+     * @return Response
+     * @throws SlackApiException
+     * @link https://api.slack.com/methods/conversations.history
+     */
+    public function conversationHistory(string $string, array $options = []): Response
+    {
+        $args = [
+            'channel' => $string,
+        ];
+
+        if ($args) {
+            $args = array_merge($args, $options);
+        }
+
+        return $this->get('conversations.history', $args);
+    }
+
+    /**
+     * @param string $channelId
+     * @param string $messageTs
+     * @return Response
+     * @throws SlackApiException
+     */
+    public function deleteMessage(string $channelId, string $messageTs): Response
+    {
+        $args = [
+            'channel' => $channelId,
+            'ts' => $messageTs
+        ];
+
+        return $this->post('chat.delete', $args);
     }
 }

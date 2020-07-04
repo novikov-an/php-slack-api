@@ -6,7 +6,6 @@ use ANovikov\Response\Type\Group;
 use ANovikovTest\BaseAnTest;
 use ANovikovTest\WithFaker;
 
-
 /**
  * Class HydrationTest
  */
@@ -61,6 +60,5 @@ class HydrationTest extends BaseAnTest
     }
 
     // to object should implement first array
-    // $this->toObject(array, Hydrator class)
     // $this->toArray($obj);
 }
