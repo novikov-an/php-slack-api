@@ -143,3 +143,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 index.php
+
+# Composer
+composer.lock
+composer.phar
